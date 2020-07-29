@@ -1,73 +1,75 @@
-import utils from './utils'
+import * as dat from 'dat.gui';
 
-const canvas = document.querySelector('canvas')
-const c = canvas.getContext('2d')
 
-canvas.width = innerWidth
-canvas.height = innerHeight
+window.addEventListener('load', function() {
+  animate();
+});
 
-const mouse = {
-  x: innerWidth / 2,
-  y: innerHeight / 2
+window.addEventListener('resize', function() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  animate();
+});
+
+const gui = new dat.GUI();
+const canvas = document.querySelector('canvas');
+const c = canvas.getContext('2d');
+
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+const wave = {
+  y: canvas.height / 2,
+  length: 0.01,
+  amplitude: 100,
+  frequency: 0.01
+};
+
+const strokeColor = {
+  h: 50,
+  s: 50,
+  l: 50
 }
 
-const colors = ['#2185C5', '#7ECEFD', '#FFF6E5', '#FF7F66']
-
-// Event Listeners
-addEventListener('mousemove', (event) => {
-  mouse.x = event.clientX
-  mouse.y = event.clientY
-})
-
-addEventListener('resize', () => {
-  canvas.width = innerWidth
-  canvas.height = innerHeight
-
-  init()
-})
-
-// Objects
-class Object {
-  constructor(x, y, radius, color) {
-    this.x = x
-    this.y = y
-    this.radius = radius
-    this.color = color
-  }
-
-  draw() {
-    c.beginPath()
-    c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
-    c.fillStyle = this.color
-    c.fill()
-    c.closePath()
-  }
-
-  update() {
-    this.draw()
-  }
+const bgColor = {
+  r: 0,
+  g: 0,
+  b: 0,
+  a: 0.01
 }
 
-// Implementation
-let objects
-function init() {
-  objects = []
+const waveFolder = gui.addFolder('wave');
+waveFolder.add(wave, 'y', 0, canvas.height);
+waveFolder.add(wave, 'length', -0.01, 0.01);
+waveFolder.add(wave, 'amplitude', -300, 300);
+waveFolder.add(wave, 'frequency', -0.01, 0.01);
 
-  for (let i = 0; i < 400; i++) {
-    // objects.push()
-  }
-}
+const strokeFolder = gui.addFolder('stroke');
+strokeFolder.add(strokeColor, 'h', 0, 255);
+strokeFolder.add(strokeColor, 's', 0, 100);
+strokeFolder.add(strokeColor, 'l', 0, 100);
 
-// Animation Loop
+const bgFolder = gui.addFolder('background');
+bgFolder.add(bgColor, 'r', 0, 255);
+bgFolder.add(bgColor, 'g', 0, 255);
+bgFolder.add(bgColor, 'b', 0, 255);
+bgFolder.add(bgColor, 'a', 0, 1);
+
+let increment = wave.frequency;
+
 function animate() {
-  requestAnimationFrame(animate)
-  c.clearRect(0, 0, canvas.width, canvas.height)
+  requestAnimationFrame(animate);
+  c.fillStyle = `rgba(${bgColor.r}, ${bgColor.g}, ${bgColor.b}, ${bgColor.a}`;
+  c.fillRect(0, 0, canvas.width, canvas.height);
+  c.beginPath();
 
-  c.fillText('HTML CANVAS BOILERPLATE', mouse.x, mouse.y)
-  // objects.forEach(object => {
-  //  object.update()
-  // })
+  c.moveTo(0, canvas.height / 2);
+
+  for (let i = 0; i < canvas.width; i++) {
+      c.lineTo(i, wave.y + Math.sin(i * wave.length + increment) *  wave.amplitude * Math.sin(0.01 + increment));
+  }
+
+  c.strokeStyle = `hsl(${Math.abs(strokeColor.h * Math.sin(increment))}, ${strokeColor.s}%, ${strokeColor.l}%)`;
+  c.stroke();
+  increment += wave.frequency;
 }
-
-init()
-animate()
